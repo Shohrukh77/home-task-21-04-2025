@@ -1,0 +1,106 @@
+﻿using System.Net;
+using AutoMapper;
+using Domain.DTOs.Order;
+using Domain.Entities;
+using Domain.Filters;
+using Domain.Responses;
+using Infrastructure.Data;
+using Infrastructure.Interfaces;
+
+namespace Infrastructure.Services;
+
+public class OrderService(DataContext context, IMapper  mapper) : IOrderService
+{
+    public async Task<Response<List<GetOrderDto>>> GetAllAsync(OrderFilter filter)
+    {
+        try
+        {
+            var validFilter = new ValidFilter(filter.PageNumber, filter.PageSize);
+
+            var orders = context.Orders.AsQueryable();
+
+            if (filter.UserId != null)
+            {
+                var order = orders.Where(o =>  o.UserId == filter.UserId);
+            }
+            if (filter.CourierId != null)
+            {
+                var order = orders.Where(o =>  o.CourierId == filter.CourierId);
+            }
+            if (filter.RestaurantId != null)
+            {
+                var order = orders.Where(o =>  o.RestaurantId == filter.RestaurantId);
+            }
+            
+            var maped = mapper.Map<List<GetOrderDto>>(orders);
+
+            var totalRecords = maped.Count;
+
+            var data = maped
+                .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                .Take(validFilter.PageSize)
+                .ToList();
+
+            return new PagedResponse<List<GetOrderDto>>(data, validFilter.PageNumber, validFilter.PageSize,
+                totalRecords);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+    public async Task<Response<GetOrderDto>> GetAsync(int Id)
+    {
+        var order = await context.Orders.FindAsync(Id);
+        if (order == null)
+            return new Response<GetOrderDto>(HttpStatusCode.BadRequest, "Order not found");
+
+        var dto = mapper.Map<GetOrderDto>(order);
+        return new Response<GetOrderDto>(dto);
+    }
+
+    public async Task<Response<GetOrderDto>> CreateAsync(CreateOrderDto request)
+    {
+        var entity = mapper.Map<Order>(request);
+        await context.Orders.AddAsync(entity);
+        var result = await context.SaveChangesAsync();
+
+        if (result == 0)
+            return new Response<GetOrderDto>(HttpStatusCode.BadRequest, "Order not created!");
+
+        var dto = mapper.Map<GetOrderDto>(entity);
+        return new Response<GetOrderDto>(dto);
+    }
+
+    public async Task<Response<GetOrderDto>> UpdateAsync(int Id, UpdateOrderDto request)
+    {
+        var exist = await context.Orders.FindAsync(Id);
+        if (exist == null)
+            return new Response<GetOrderDto>(HttpStatusCode.BadRequest, "Order not found");
+
+        mapper.Map(request, exist);
+        var result = await context.SaveChangesAsync();
+
+        if (result == 0)
+            return new Response<GetOrderDto>(HttpStatusCode.BadRequest, "Order not updated!");
+
+        var dto = mapper.Map<GetOrderDto>(exist);
+        return new Response<GetOrderDto>(dto);
+    }
+
+    public async Task<Response<string>> DeleteAsync(int Id)
+    {
+        var order = await context.Orders.FindAsync(Id);
+        if (order == null)
+            return new Response<string>(HttpStatusCode.BadRequest, "Order not found");
+
+        context.Orders.Remove(order);
+        var result = await context.SaveChangesAsync();
+
+        return result == 0
+            ? new Response<string>(HttpStatusCode.BadRequest, "Order not deleted!")
+            : new Response<string>("Order deleted!");
+    }
+
+}
