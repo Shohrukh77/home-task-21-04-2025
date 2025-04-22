@@ -142,7 +142,38 @@ public class MenuService(DataContext context, IMapper mapper ) : IMenuService
 
         return new PagedResponse<List<GetMenuDto>>(data, pageNumber, pageSize, totalRecords);
     }
-    
+
     //task4
-    
+    public async Task<Response<List<GetMenuByCategoryDto>>> GetMenuByCategory(int pageNumber = 1, int pageSize = 10)
+    {
+        var query = context.Menus
+            .GroupBy(m => m.Category)
+            .Select(g => new { Category = g.Key, AveragePrice = g.Average(m => m.Price) });
+        var res = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        var totalRecords = await query.CountAsync();
+        
+        var data = mapper.Map<List<GetMenuByCategoryDto>>(res);
+        return new PagedResponse<List<GetMenuByCategoryDto>>(data, pageNumber, pageSize, totalRecords);
+    }
+
+    //task10
+    public async Task<Response<List<GetMenuPopularCategoryDto>>> GetMenuPopularCategoty(int pageNumber = 1, int pageSize = 10)
+    {
+        var query = context.Menus
+            .GroupBy(m => m.Category)
+            .OrderByDescending(g => g.Count())
+            .Select(g => new { Category = g.Key, Count = g.Count() });
+
+        var res = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        
+        var totalRecords = await query.CountAsync();
+        var data = mapper.Map<List<GetMenuPopularCategoryDto>>(res);
+        return new PagedResponse<List<GetMenuPopularCategoryDto>>(data, pageNumber, pageSize, totalRecords);
+    }
 }

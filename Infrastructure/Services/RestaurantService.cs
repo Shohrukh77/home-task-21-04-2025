@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
-public class RestaurantService(DataContext context, IMapper  mapper) : IRestaurantsService
+public class RestaurantService(DataContext context, IMapper mapper) : IRestaurantsService
 {
     public async Task<Response<List<GetRestaurantDto>>> GetAllAsync(RestaurantsFilter filter)
     {
@@ -29,10 +29,12 @@ public class RestaurantService(DataContext context, IMapper  mapper) : IRestaura
             {
                 var res = restaurants.Where(r => r.Rating >= filter.Rating);
             }
+
             if (filter.To != null)
             {
                 var res = restaurants.Where(r => r.Rating <= filter.Rating);
             }
+
             var maped = mapper.Map<List<GetRestaurantDto>>(restaurants);
 
             var totalRecords = maped.Count;
@@ -51,6 +53,7 @@ public class RestaurantService(DataContext context, IMapper  mapper) : IRestaura
             throw;
         }
     }
+
     public async Task<Response<GetRestaurantDto>> GetAsync(int Id)
     {
         var restaurant = await context.Restaurants.FindAsync(Id);
@@ -103,6 +106,7 @@ public class RestaurantService(DataContext context, IMapper  mapper) : IRestaura
             ? new Response<string>(HttpStatusCode.BadRequest, "Restaurant not deleted!")
             : new Response<string>("Restaurant deleted!");
     }
+
     //task1
     public async Task<Response<List<GetRestaurantDto>>> GetRestaurantsActive(int pageNumber = 1, int pageSize = 10)
     {
@@ -120,5 +124,29 @@ public class RestaurantService(DataContext context, IMapper  mapper) : IRestaura
         var data = mapper.Map<List<GetRestaurantDto>>(restaurants);
 
         return new PagedResponse<List<GetRestaurantDto>>(data, pageSize, pageNumber, totalRecords);
+    }
+
+    //task11
+    public async Task<Response<List<GetTopRestDto>>> GetTopRestaurants(int pageNumber = 1, int pageSize = 10)
+    {
+        var now = DateTime.Now.AddMonths(-1);
+
+        var query = context.Orders
+            .Where(o => o.CreatedAt >= now)
+            .GroupBy(o => o.Restaurant)
+            .Select(g => new GetTopRestDto
+            {
+                Name = g.Key.Name,
+                Count = g.Count()
+            })
+            .OrderByDescending(r => r.Count);
+
+        var data = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var totalRecords = await query.CountAsync();
+        return new PagedResponse<List<GetTopRestDto>>(data, pageNumber, pageSize, totalRecords);
     }
 }

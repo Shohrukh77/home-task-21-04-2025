@@ -122,4 +122,55 @@ public class OrderService(DataContext context, IMapper  mapper) : IOrderService
 
         return new PagedResponse<List<GetOrdersCountByStatusDto>>(data, pageNumber, pageSize, totalRecords);
     }
+    
+    //task6
+    public async Task<Response<List<GetOrderDto>>> GetOrdersByCourier(int courierId, int pageNumber = 1, int pageSize = 10)
+    {
+        var query = context.Orders
+            .Where(o => o.CourierId == courierId)
+            .OrderByDescending(o => o.Id);
+
+        var orders = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var totalRecords = await query.CountAsync();
+
+        var data = mapper.Map<List<GetOrderDto>>(orders);
+
+        return new PagedResponse<List<GetOrderDto>>(data, pageSize, pageNumber, totalRecords);
+    }
+
+    //task7
+    public async Task<Response<decimal>> GetOrderTotalToday()
+    {
+        var today = DateTime.Today;
+        var result = await context.Orders
+            .Where(o => o.DeliveredAt == today)
+            .SumAsync(o => o.TotalAmount);
+
+        return new Response<decimal>(result);
+    }
+    
+    //task9
+    public async Task<Response<List<GetOrderDto>>> GetOrdersAboveAveragePagedAsync(int pageNumber = 1, int pageSize = 10)
+    {
+        var avg = await context.Orders.AverageAsync(o => o.TotalAmount);
+
+        var query = context.Orders
+            .Where(o => o.TotalAmount > avg)
+            .OrderByDescending(o => o.TotalAmount);
+
+        var orders = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var totalRecords = await query.CountAsync();
+
+        var data = mapper.Map<List<GetOrderDto>>(orders);
+
+        return new PagedResponse<List<GetOrderDto>>(data, pageSize, pageNumber, totalRecords);
+    }
 }

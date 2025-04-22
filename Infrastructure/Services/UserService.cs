@@ -101,4 +101,27 @@ public class UserService(DataContext context, IMapper mapper) : IUserService
             ? new Response<string>(HttpStatusCode.BadRequest, "User not deleted!")
             : new Response<string>("User deleted!");
     }
+    
+    //task5
+    public async Task<Response<List<GetUsersWithOrdersDto>>> GetUsersWithOrders(int pageNumber = 1, int pageSize = 10)
+    {
+        var query = context.Users
+            .OrderBy(u => u.Name);
+
+        var users = query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize);
+
+        var totalRecords = query.Count();
+
+        var result = users.Select(u => new
+        {
+            u.Id,
+            u.Name,
+            OrdersCount = context.Orders.Count(o => o.UserId == u.Id)
+        }).ToList();
+        
+        var data = mapper.Map<List<GetUsersWithOrdersDto>>(result);
+        return new PagedResponse<List<GetUsersWithOrdersDto>>(data, pageNumber, pageSize, totalRecords);
+    }
 }

@@ -113,4 +113,15 @@ public class CourierService(DataContext context, IMapper mapper) : ICourierServi
             : new Response<string>("Courier  deleted!");
     }
 
+    //task8
+    public async Task<Response<List<GetCourierDto>>> GetTopCouriersAsync()
+    {
+        var query = context.Couriers
+            .OrderByDescending(c => c.Rating)
+            .Take(5);
+        
+        var data = mapper.Map<List<GetCourierDto>>(query);
+
+        return new Response<List<GetCourierDto>>(data);
+    }
 }

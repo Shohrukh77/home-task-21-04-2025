@@ -11,4 +11,5 @@ public interface ICourierService
     Task<Response<GetCourierDto>> CreateAsync(CreateCourierDto request);
     Task<Response<GetCourierDto>> UpdateAsync(int id, UpdateCourierDto request);
     Task<Response<string>> DeleteAsync(int id);
+    Task<Response<List<GetCourierDto>>> GetTopCouriersAsync();
 }

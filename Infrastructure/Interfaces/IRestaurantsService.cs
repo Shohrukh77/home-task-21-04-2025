@@ -12,4 +12,5 @@ public interface IRestaurantsService
     Task<Response<GetRestaurantDto>> UpdateAsync(int id, UpdateRestaurantsDto request);
     Task<Response<string>> DeleteAsync(int id);
     Task<Response<List<GetRestaurantDto>>> GetRestaurantsActive(int pageNumber = 1,int pageSize = 10);
+    Task<Response<List<GetTopRestDto>>> GetTopRestaurants(int pageNumber = 1,int pageSize = 10);
 }

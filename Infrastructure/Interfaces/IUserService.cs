@@ -11,4 +11,5 @@ public interface IUserService
     Task<Response<GetUserDto>> CreateAsync(CreateUserDto request);
     Task<Response<GetUserDto>> UpdateAsync(int id, UpdateUserDto request);
     Task<Response<string>> DeleteAsync(int id);
+    Task<Response<List<GetUsersWithOrdersDto>>> GetUsersWithOrders(int pageNumber = 1, int pageSize = 10);
 }

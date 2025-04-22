@@ -12,4 +12,6 @@ public interface IMenuService
     Task<Response<GetMenuDto>> UpdateAsync(int id, UpdateMenuDto request);
     Task<Response<string>> DeleteAsync(int id);
     Task<Response<List<GetMenuDto>>> GetMenuAvailable(int pageNumber = 1, int pageSize = 10);
+    Task<Response<List<GetMenuByCategoryDto>>> GetMenuByCategory(int pageNumber = 1, int pageSize = 10);
+    Task<Response<List<GetMenuPopularCategoryDto>>> GetMenuPopularCategoty(int pageNumber = 1, int pageSize = 10);
 }
