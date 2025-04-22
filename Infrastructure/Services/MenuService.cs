@@ -6,6 +6,7 @@ using Domain.Filters;
 using Domain.Responses;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
@@ -126,4 +127,22 @@ public class MenuService(DataContext context, IMapper mapper ) : IMenuService
             ? new Response<string>(HttpStatusCode.BadRequest, "Menu not deleted!")
             : new Response<string>("Menu  deleted!");
     }
+    //task2
+    public async Task<Response<List<GetMenuDto>>> GetMenuAvailable(int pageNumber = 1, int pageSize = 10)
+    {
+        var query = context.Menus
+            .Where(m => m.Price <= 1000);
+        var menus = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        var totalRecords = await query.CountAsync();
+        
+        var data = mapper.Map<List<GetMenuDto>>(menus);
+
+        return new PagedResponse<List<GetMenuDto>>(data, pageNumber, pageSize, totalRecords);
+    }
+    
+    //task4
+    
 }

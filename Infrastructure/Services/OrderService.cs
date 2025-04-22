@@ -2,10 +2,12 @@
 using AutoMapper;
 using Domain.DTOs.Order;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Filters;
 using Domain.Responses;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
@@ -102,5 +104,22 @@ public class OrderService(DataContext context, IMapper  mapper) : IOrderService
             ? new Response<string>(HttpStatusCode.BadRequest, "Order not deleted!")
             : new Response<string>("Order deleted!");
     }
+    //task 3
+    public async Task<Response<List<GetOrdersCountByStatusDto>>> GetOrdersByStatus(OrderStatus orderStatus, int pageNumber = 1, int pageSize = 10)
+    {
+        var result = context.Orders
+            .GroupBy(o => o.OrderStatus)
+            .Select(g => new { Status = g.Key, Count = g.Count() });
+        
+        var orders = await result
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
+        var totalRecords = await result.CountAsync();
+        
+        var  data = mapper.Map<List<GetOrdersCountByStatusDto>>(orders);
+
+        return new PagedResponse<List<GetOrdersCountByStatusDto>>(data, pageNumber, pageSize, totalRecords);
+    }
 }

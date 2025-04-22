@@ -1,5 +1,6 @@
 ﻿using Domain.DTOs.Order;
 using Domain.DTOs.User;
+using Domain.Enums;
 using Domain.Filters;
 using Domain.Responses;
 
@@ -12,4 +13,5 @@ public interface IOrderService
     Task<Response<GetOrderDto>> CreateAsync(CreateOrderDto request);
     Task<Response<GetOrderDto>> UpdateAsync(int id, UpdateOrderDto request);
     Task<Response<string>> DeleteAsync(int id);
+    Task<Response<List<GetOrdersCountByStatusDto>>> GetOrdersByStatus(OrderStatus orderStatus, int page = 1, int pageSize = 10);
 }

@@ -6,6 +6,7 @@ using Domain.Filters;
 using Domain.Responses;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
@@ -102,5 +103,22 @@ public class RestaurantService(DataContext context, IMapper  mapper) : IRestaura
             ? new Response<string>(HttpStatusCode.BadRequest, "Restaurant not deleted!")
             : new Response<string>("Restaurant deleted!");
     }
+    //task1
+    public async Task<Response<List<GetRestaurantDto>>> GetRestaurantsActive(int pageNumber = 1, int pageSize = 10)
+    {
+        var query = context.Restaurants
+            .Where(r => r.IsActive)
+            .OrderByDescending(r => r.Rating);
 
+        var restaurants = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var totalRecords = await query.CountAsync();
+
+        var data = mapper.Map<List<GetRestaurantDto>>(restaurants);
+
+        return new PagedResponse<List<GetRestaurantDto>>(data, pageSize, pageNumber, totalRecords);
+    }
 }
